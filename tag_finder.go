@@ -10,7 +10,7 @@ func ResponseTag(field reflect.StructField) string {
 	if name = field.Tag.Get("response"); name != "" {
 		return name
 	}
-	if name = field.Tag.Get("json"); name != "" && name != "-" {
+	if name = field.Tag.Get("json"); name != "" {
 		return name
 	}
 	return strings.ToLower(field.Name)
