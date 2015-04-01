@@ -214,6 +214,13 @@ func (response *Response) createSliceResponse(value reflect.Value, depth int) in
 	return respSlice
 }
 
+// ShouldInclude is a callback function used to ask the calling code to
+// determine if the field for the conditional tag should be included in the
+// response.
+var ShouldInclude = func(tag string) bool {
+	return true
+}
+
 // createStructResponse is a helper for generating a response value
 // from a value of type struct.
 func (response *Response) createStructResponse(value reflect.Value, depth int) interface{} {
@@ -243,6 +250,20 @@ func (response *Response) createStructResponse(value reflect.Value, depth int) i
 		case "-":
 			continue
 		default:
+
+			cond := fieldType.Tag.Get("cond")
+			shouldInclude := false
+			condParts := strings.Split(cond, ",")
+			for _, part := range condParts {
+				shouldInclude = ShouldInclude(part)
+				if shouldInclude {
+					break
+				}
+			}
+			if !shouldInclude {
+				continue
+			}
+
 			if fieldType.PkgPath != "" {
 				// Handle unexported fields using getters and setters, if possible.
 				getterName := strings.Title(fieldType.Name)
