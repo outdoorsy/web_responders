@@ -234,7 +234,7 @@ func (response *Response) createStructResponse(value reflect.Value, depth int) i
 		fieldType := value.Type().Field(i)
 		fieldValue := value.Field(i)
 
-		if fieldType.Anonymous {
+		if fieldType.Anonymous && fieldType.PkgPath == "" {
 			embeddedResponse := response.createResponse(fieldValue.Interface(), depth).(objx.Map)
 			for key, value := range embeddedResponse {
 				// Don't overwrite values from the base struct
@@ -250,12 +250,9 @@ func (response *Response) createStructResponse(value reflect.Value, depth int) i
 		var omit string
 		if idx != -1 {
 			name = str[:strings.IndexRune(str, ',')]
-			omit = str[strings.IndexRune(str, ','):]
+			omit = str[strings.IndexRune(str, ',')+1:]
 		} else {
 			name = str
-		}
-		if omit == "omitempty" {
-			continue
 		}
 		switch name {
 		case "-":
@@ -303,10 +300,33 @@ func (response *Response) createStructResponse(value reflect.Value, depth int) i
 				}
 				fieldValue = getterMethod.Func.Call([]reflect.Value{receiver})[0]
 			}
+			if !fieldValue.IsValid() || omit == "omitempty" && isEmptyValue(fieldValue) {
+				continue
+			}
 			respMap[name] = response.createResponseValue(fieldValue, depth+1)
 		}
 	}
 	return respMap
+}
+
+func isEmptyValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	case reflect.Struct:
+		return reflect.DeepEqual(v.Interface(), reflect.Zero(v.Type()).Interface())
+	}
+	return false
 }
 
 // createResponseValue is a helper for generating responses from
