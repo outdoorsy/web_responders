@@ -10,7 +10,7 @@ import (
 // when creating a single page of its UI.
 //
 // Usually, we like to generate the full response from the codec for
-// those embedded elements.  A simple example using stretchr/goweb:
+// those embedded elements.  A simple example using tylerb/goweb:
 //
 //     type SubElement struct {
 //         Id int

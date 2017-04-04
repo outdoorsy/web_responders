@@ -1,7 +1,7 @@
 package web_responders
 
 import (
-	"github.com/stretchr/goweb/context"
+	"github.com/tylerb/goweb/context"
 )
 
 // A BaseRestController is just a controller that always sets the Vary
