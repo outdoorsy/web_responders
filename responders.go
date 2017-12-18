@@ -109,6 +109,10 @@ func (response *Response) createResponse(data interface{}, depth int) interface{
 		lazyLoader.LazyLoad(response.Options)
 	}
 
+	if preMarshaller, ok := data.(PreMarshaller); ok {
+		preMarshaller.PreMarshal()
+	}
+
 	responseData := data
 	if response.Constructor != nil {
 		var descend bool
