@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/stretchr/objx"
 )
@@ -354,8 +355,11 @@ func (response *Response) createResponseValue(value reflect.Value, depth int) in
 		}
 		responseValue = nilResponder.NilElementData()
 	}
-	if converter, ok := responseValue.(ResponseElementConverter); ok {
-		responseValue = converter.ResponseElementData(response.Options)
+	switch source := responseValue.(type) {
+	case ResponseElementConverter:
+		responseValue = source.ResponseElementData(response.Options)
+	case time.Time:
+		responseValue = source.Format(time.RFC3339)
 	}
 	return response.createResponse(responseValue, depth)
 }
